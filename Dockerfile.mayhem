@@ -1,0 +1,21 @@
+# Use the example in Mayhem Docs as an example/starting point
+FROM rust:1.60-buster as rust-builder
+RUN cargo install afl
+
+# Add the source code to the image and build the target
+ADD . /rust-smallvec
+WORKDIR /rust-smallvec/fuzz
+RUN cargo afl build --release --bin smallvec_ops --features afl
+# Built target is in /rust-smallvec/fuzz/target/release/
+
+# To simplify matters, we'll copy the compiled target as well as
+# the fuzz input folder to a new image with AFL
+FROM --platform=linux/amd64 rust:1.60-buster
+RUN cargo install afl
+
+# Copy the compiled target and the input cases
+COPY --from=rust-builder /rust-smallvec/fuzz/target/release/smallvec_ops /rust-smallvec/fuzz/in /
+
+# Set to fuzz!
+ENTRYPOINT ["cargo", "afl", "fuzz", "-i", "/in", "-o", "/out"]
+CMD ["/smallvec_ops"]

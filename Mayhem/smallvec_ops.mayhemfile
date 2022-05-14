@@ -1,0 +1,9 @@
+project: rust-smallvec
+target: smallvec_ops
+duration: 300
+
+cmds:
+  - cmd: /smallvec_ops
+    env:
+      DISABLE_SMOKETEST: '1'
+    afl: true
